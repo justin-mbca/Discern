@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from app.db.models import User, AgencyReview, RationaleLog
 from app.db.deps import get_db
+from app.api.deps import get_api_key
 import csv
 import io
 
 router = APIRouter()
 
-@router.get("/report/reviews/")
+@router.get("/report/reviews/", dependencies=[Depends(get_api_key)])
 def get_all_reviews(db: Session = Depends(get_db)):
     reviews = db.query(AgencyReview).all()
     return [
@@ -23,7 +24,7 @@ def get_all_reviews(db: Session = Depends(get_db)):
         for r in reviews
     ]
 
-@router.get("/report/rationales/")
+@router.get("/report/rationales/", dependencies=[Depends(get_api_key)])
 def get_all_rationales(db: Session = Depends(get_db)):
     logs = db.query(RationaleLog).all()
     return [
@@ -38,7 +39,7 @@ def get_all_rationales(db: Session = Depends(get_db)):
         for l in logs
     ]
 
-@router.get("/report/reviews/csv/")
+@router.get("/report/reviews/csv/", dependencies=[Depends(get_api_key)])
 def export_reviews_csv(db: Session = Depends(get_db)):
     reviews = db.query(AgencyReview).all()
     output = io.StringIO()
@@ -48,7 +49,7 @@ def export_reviews_csv(db: Session = Depends(get_db)):
         writer.writerow([r.id, r.user_id, r.reviewed_by, r.review_stage, r.review_result, r.notes, r.created_at])
     return Response(content=output.getvalue(), media_type="text/csv")
 
-@router.get("/report/rationales/csv/")
+@router.get("/report/rationales/csv/", dependencies=[Depends(get_api_key)])
 def export_rationales_csv(db: Session = Depends(get_db)):
     logs = db.query(RationaleLog).all()
     output = io.StringIO()
