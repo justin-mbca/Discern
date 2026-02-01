@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.models import User, AgencyReview, RationaleLog
 from app.db.deps import get_db
+from app.api.deps import get_api_key
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -19,7 +20,7 @@ class RationaleRequest(BaseModel):
     reviewer_id: int      # staff/counselor user id
     rationale: str
 
-@router.post("/agency/review/")
+@router.post("/agency/review/", dependencies=[Depends(get_api_key)])
 def agency_review(req: AgencyReviewRequest, db: Session = Depends(get_db)):
     reviewer = db.query(User).filter(User.id == req.reviewed_by).first()
     if not reviewer:
@@ -36,7 +37,7 @@ def agency_review(req: AgencyReviewRequest, db: Session = Depends(get_db)):
     db.refresh(review)
     return {"review_id": review.id, "status": review.review_result}
 
-@router.post("/agency/rationale/")
+@router.post("/agency/rationale/", dependencies=[Depends(get_api_key)])
 def add_rationale(req: RationaleRequest, db: Session = Depends(get_db)):
     reviewer = db.query(User).filter(User.id == req.reviewer_id).first()
     if not reviewer:
